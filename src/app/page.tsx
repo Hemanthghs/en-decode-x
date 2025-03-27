@@ -1,103 +1,145 @@
-import Image from "next/image";
+'use client'
+
+import { useState, useEffect } from 'react';
+import { FiCopy, FiSun, FiMoon, FiClipboard, FiX } from 'react-icons/fi';
+
+const getInitialTheme = () => {
+  if (typeof window !== 'undefined') {
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme ? savedTheme === 'dark' : true; // default to dark if no preference
+  }
+  return true; // default to dark on server-side
+};
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [input, setInput] = useState('');
+  const [encoded, setEncoded] = useState('');
+  const [decoded, setDecoded] = useState('');
+  const [isDark, setIsDark] = useState(getInitialTheme);
+  const [isPasting, setIsPasting] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  useEffect(() => {
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    document.documentElement.classList.toggle('dark', isDark);
+  }, [isDark]);
+
+  useEffect(() => {
+    try {
+      const encodedText = btoa(input);
+      setEncoded(encodedText);
+    } catch (e) {
+      setEncoded('Invalid input for encoding');
+    }
+
+    try {
+      const decodedText = atob(input);
+      setDecoded(decodedText);
+    } catch (e) {
+      setDecoded('Invalid base64 input');
+    }
+  }, [input]);
+
+  const handleCopy = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+  };
+
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setInput(text);
+      setIsPasting(true);
+      setTimeout(() => setIsPasting(false), 500);
+    } catch (err) {
+      console.error('Failed to read clipboard:', err);
+    }
+  };
+
+  const handleClear = () => {
+    setInput('');
+    setIsClearing(true);
+    setTimeout(() => setIsClearing(false), 300);
+  };
+
+  const toggleTheme = () => {
+    setIsDark(!isDark);
+    document.documentElement.classList.toggle('dark');
+  };
+
+  return (
+    <div className="min-h-screen bg-white dark:bg-gray-900 bg-grid-pattern p-8">
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">
+            Base64 Encoder/Decoder
+          </h1>
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            {isDark ? <FiSun className="w-5 h-5" /> : <FiMoon className="w-5 h-5" />}
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        <div className="space-y-6">
+          <div className="relative">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Enter text to encode/decode..."
+              className="w-full h-40 p-4 rounded-lg bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-500 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            />
+            <div className="absolute top-4 right-4 flex space-x-2">
+              <button
+                onClick={handlePaste}
+                disabled={isPasting}
+                className="p-2 rounded-lg bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+              >
+                <FiClipboard className={`w-5 h-5 ${isPasting ? 'animate-spin' : ''}`} />
+              </button>
+              <button
+                onClick={handleClear}
+                disabled={isClearing}
+                className="p-2 rounded-lg bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+              >
+                <FiX className={`w-5 h-5 ${isClearing ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white">Encoded</h2>
+              <div className="relative">
+                <div className="w-full min-h-[100px] p-4 rounded-lg bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-sm text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 break-all">
+                  {encoded}
+                </div>
+                <button
+                  onClick={() => handleCopy(encoded)}
+                  className="absolute top-2 right-2 p-2 rounded-lg bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                >
+                  <FiCopy className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white">Decoded</h2>
+              <div className="relative">
+                <div className="w-full min-h-[100px] p-4 rounded-lg bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-sm text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 break-all">
+                  {decoded}
+                </div>
+                <button
+                  onClick={() => handleCopy(decoded)}
+                  className="absolute top-2 right-2 p-2 rounded-lg bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                >
+                  <FiCopy className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
